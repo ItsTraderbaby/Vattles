@@ -1,0 +1,47 @@
+.app-background {
+  background-color: #0D0B14;
+  min-height: 100vh;
+  position: relative;
+  background-image: url("/background.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.app-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: #0D0B14;
+  opacity: 0.6;
+}
+
+.app-main {
+  position: relative;
+  z-index: 10;
+}
+
+.app-main-authenticated {
+  padding: 1rem 1.5rem 2rem;
+}
+
+@media (min-width: 640px) {
+  .app-main-authenticated {
+    padding: 1.5rem 2rem 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-main-authenticated {
+    padding: 2rem 3rem 4rem;
+  }
+}
+
+.app-main-fullscreen {
+  height: 100vh;
+}
+
+.app-modals {
+  position: relative;
+  z-index: 20;
+}

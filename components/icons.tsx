@@ -3,25 +3,7 @@ import React from 'react';
 type IconProps = React.SVGProps<SVGSVGElement>;
 
 export const LogoIcon: React.FC<IconProps> = (props) => (
-  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-    <path d="M50 0L93.3 25V75L50 100L6.7 75V25L50 0Z" fill="url(#paint0_linear_logo)" />
-    <path d="M50 10L86.6 30V70L50 90L13.4 70V30L50 10Z" stroke="url(#paint1_linear_logo)" strokeWidth="3" />
-    <path d="M50 20L77.25 35V65L50 80L22.75 65V35L50 20Z" stroke="url(#paint2_linear_logo)" strokeWidth="2" />
-    <defs>
-      <linearGradient id="paint0_linear_logo" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#A855F7" />
-        <stop offset="1" stopColor="#2DD4BF" />
-      </linearGradient>
-      <linearGradient id="paint1_linear_logo" x1="50" y1="10" x2="50" y2="90" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#C4B5FD" />
-        <stop offset="1" stopColor="#99F6E4" />
-      </linearGradient>
-      <linearGradient id="paint2_linear_logo" x1="50" y1="20" x2="50" y2="80" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#FFFFFF" stopOpacity="0.8" />
-        <stop offset="1" stopColor="#FFFFFF" stopOpacity="0.5" />
-      </linearGradient>
-    </defs>
-  </svg>
+  <img src="/logo.png" alt="Vattles Logo" {...props} />
 );
 
 export const TrophyIcon: React.FC<IconProps> = (props) => (

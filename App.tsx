@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { UserProfile, VattleConfig, Ratings, Tournament, RatingCategory, ShowcaseItem, PortfolioItem, Achievement, Endorsement, ProfileTheme, Rivalry, PromptLibraryItem } from './types';
+import { UserProfile, VattleConfig, Ratings, Tournament, ShowcaseItem, PortfolioItem, Achievement, Endorsement, Rivalry, PromptLibraryItem } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import './App.css';
 
 // Views
 import AuthView from './components/AuthView';
@@ -106,14 +107,39 @@ const App: React.FC = () => {
     const [view, setView] = useState<View>('auth');
     const [userProfile, setUserProfile] = useLocalStorage<UserProfile>('vattles-user-profile', initialUserProfile);
     const [vattles, setVattles] = useLocalStorage<VattleConfig[]>('vattles-data', initialVattles);
-    const [tournaments, setTournaments] = useState<Tournament[]>(mockTournaments);
+    const tournaments = mockTournaments;
     const [activeVattle, setActiveVattle] = useState<VattleConfig | null>(null);
     const [activeTournament, setActiveTournament] = useState<Tournament | null>(null);
 
     const [isCreateVattleModalOpen, setCreateVattleModalOpen] = useState(false);
-    const [isProfileModalOpen, setProfileModalOpen] = useState(false);
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     
-    const [votedOn, setVotedOn] = useLocalStorage<{[key: string]: boolean}>('vattles-voted', {});
+    const [votedOn, setVotedOn] = useState<{[key: string]: boolean}>({});
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const item = window.localStorage.getItem('vattles-voted');
+                if (item) {
+                    setVotedOn(JSON.parse(item));
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    }, []);
+
+    const updateVotedOn = (value: {[key: string]: boolean} | ((val: {[key: string]: boolean}) => {[key: string]: boolean})) => {
+        try {
+            const newValue = value instanceof Function ? value(votedOn) : value;
+            setVotedOn(newValue);
+            if (typeof window !== 'undefined') {
+                window.localStorage.setItem('vattles-voted', JSON.stringify(newValue));
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
     const [registeredTournaments, setRegisteredTournaments] = useLocalStorage<{[key: string]: boolean}>('vattles-tournaments-reg', {});
     const [labInitialPrompt, setLabInitialPrompt] = useState<string>('');
 
@@ -180,7 +206,7 @@ const App: React.FC = () => {
 
     const handleVote = (vattleId: string, appIdentifier: 'A' | 'B', ratings: Ratings) => {
         console.log('Voted on:', { vattleId, appIdentifier, ratings });
-        setVotedOn(prev => ({ ...prev, [vattleId]: true }));
+        updateVotedOn(prev => ({ ...prev, [vattleId]: true }));
     };
     
     const handleSaveProfile = (newProfile: UserProfile) => {
@@ -313,7 +339,7 @@ const App: React.FC = () => {
                 return <ProfileView 
                             userProfile={userProfile} 
                             onBack={() => setView('arena')} 
-                            onEdit={() => setProfileModalOpen(true)} 
+                            onEdit={() => setIsProfileModalOpen(true)}
                             onPinItem={handlePinItem} 
                             onUnpinItem={handleUnpinItem}
                             onUpdateVibeAnalysis={handleUpdateVibeAnalysis}
@@ -337,20 +363,23 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="bg-[#0D0B14] min-h-screen">
+        <div className="app-background">
+            <div className="app-overlay"></div>
             {isAuthenticated && view !== 'onboarding' && (
-                <Header 
-                    userProfile={userProfile} 
+                <Header
+                    userProfile={userProfile}
                     onNavigate={(v) => handleNavigate(v as View)}
                     onOpenCreateVattle={() => setCreateVattleModalOpen(true)}
                     onLogout={handleLogout}
                 />
             )}
-            <main className={` ${isAuthenticated && view !== 'onboarding' ? 'p-4 sm:p-6 lg:p-8' : 'h-screen'}`}>
+            <main className={`app-main ${isAuthenticated && view !== 'onboarding' ? 'app-main-authenticated' : 'app-main-fullscreen'}`}>
                 {renderView()}
             </main>
-            <CreateVattleModal isOpen={isCreateVattleModalOpen} onClose={() => setCreateVattleModalOpen(false)} onCreate={handleCreateVattle} isCoach={userProfile.role === 'coach'}/>
-            <ProfileModal isOpen={isProfileModalOpen} onClose={() => setProfileModalOpen(false)} currentProfile={userProfile} onSave={handleSaveProfile} />
+            <div className="app-modals">
+                <CreateVattleModal isOpen={isCreateVattleModalOpen} onClose={() => setCreateVattleModalOpen(false)} onCreate={handleCreateVattle} isCoach={userProfile.role === 'coach'}/>
+                <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} currentProfile={userProfile} onSave={handleSaveProfile} />
+            </div>
         </div>
     );
 };

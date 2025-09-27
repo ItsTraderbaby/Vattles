@@ -16,9 +16,10 @@ interface AppPanelProps {
 }
 
 const AppPanel: React.FC<AppPanelProps> = ({ submission, mode, ratings, onRate, onVote, hasVoted, isWinner, codeToShow }) => {
-    const { title, imageUrl, demoUrl, prompts, totalVotes, color, glowColor, accentColor, finalCode } = submission;
-    const [isDemoVisible, setIsDemoVisible] = useState(mode === 'vod' ? false : true);
-    const [activeVodTab, setActiveVodTab] = useState<'demo' | 'code' | 'prompts'>('demo');
+     const { title, imageUrl, demoUrl, prompts, totalVotes, color, glowColor, accentColor, finalCode } = submission;
+     const [isDemoVisible, setIsDemoVisible] = useState(mode === 'vod' ? false : true);
+     const [activeVodTab, setActiveVodTab] = useState<'demo' | 'code' | 'prompts'>('demo');
+
     
     const voteButtonBaseClasses = `w-full py-3 mt-4 font-orbitron text-lg font-bold rounded-lg transition-all duration-300`;
     const purpleClasses = `bg-purple-600 text-white shadow-lg shadow-purple-600/30 hover:bg-purple-500 hover:shadow-purple-500/50`;
@@ -26,11 +27,14 @@ const AppPanel: React.FC<AppPanelProps> = ({ submission, mode, ratings, onRate, 
     const votedPurpleClasses = `bg-purple-900/50 text-purple-400/70 border border-purple-700/50 cursor-not-allowed shadow-none`;
     const votedTealClasses = `bg-teal-900/50 text-teal-400/70 border border-teal-700/50 cursor-not-allowed shadow-none`;
 
-    const voteButtonClasses = `${voteButtonBaseClasses} ${
-        hasVoted 
-            ? (color === 'purple' ? votedPurpleClasses : votedTealClasses)
-            : (color === 'purple' ? purpleClasses : tealClasses)
-    }`;
+    const getVoteButtonClasses = () => {
+        if (hasVoted) {
+            return color === 'purple' ? votedPurpleClasses : votedTealClasses;
+        }
+        return color === 'purple' ? purpleClasses : tealClasses;
+    };
+
+    const voteButtonClasses = `${voteButtonBaseClasses} ${getVoteButtonClasses()}`;
 
     const displayedCode = codeToShow || finalCode;
 
@@ -144,18 +148,48 @@ const AppPanel: React.FC<AppPanelProps> = ({ submission, mode, ratings, onRate, 
             {mode === 'vod' && (
                 <>
                     <div role="tablist" aria-label="VOD content" className="flex bg-gray-800/50 border border-gray-600 rounded-md p-1 mb-2">
-                        <button role="tab" aria-selected={activeVodTab === 'demo'} id="tab-demo" aria-controls="panel-demo" onClick={() => setActiveVodTab('demo')} className={`w-1/3 py-1.5 rounded transition-colors text-sm font-semibold flex items-center justify-center gap-2 ${activeVodTab === 'demo' ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}><LinkIcon className="h-4 w-4" aria-hidden="true"/> Demo</button>
-                        <button role="tab" aria-selected={activeVodTab === 'code'} id="tab-code" aria-controls="panel-code" onClick={() => setActiveVodTab('code')} className={`w-1/3 py-1.5 rounded transition-colors text-sm font-semibold flex items-center justify-center gap-2 ${activeVodTab === 'code' ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}><CodeBracketIcon className="h-4 w-4" aria-hidden="true"/> Code</button>
-                        <button role="tab" aria-selected={activeVodTab === 'prompts'} id="tab-prompts" aria-controls="panel-prompts" onClick={() => setActiveVodTab('prompts')} className={`w-1/3 py-1.5 rounded transition-colors text-sm font-semibold flex items-center justify-center gap-2 ${activeVodTab === 'prompts' ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}><TextIcon className="h-4 w-4" aria-hidden="true"/> Prompts</button>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected="true"
+                            id="tab-demo"
+                            aria-controls="panel-demo"
+                            onClick={() => setActiveVodTab('demo')}
+                            className={`w-1/3 py-1.5 rounded transition-colors text-sm font-semibold flex items-center justify-center gap-2 ${activeVodTab === 'demo' ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
+                        >
+                            <LinkIcon className="h-4 w-4" aria-hidden="true"/> Demo
+                        </button>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected="false"
+                            id="tab-code"
+                            aria-controls="panel-code"
+                            onClick={() => setActiveVodTab('code')}
+                            className={`w-1/3 py-1.5 rounded transition-colors text-sm font-semibold flex items-center justify-center gap-2 ${activeVodTab === 'code' ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
+                        >
+                            <CodeBracketIcon className="h-4 w-4" aria-hidden="true"/> Code
+                        </button>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected="false"
+                            id="tab-prompts"
+                            aria-controls="panel-prompts"
+                            onClick={() => setActiveVodTab('prompts')}
+                            className={`w-1/3 py-1.5 rounded transition-colors text-sm font-semibold flex items-center justify-center gap-2 ${activeVodTab === 'prompts' ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
+                        >
+                            <TextIcon className="h-4 w-4" aria-hidden="true"/> Prompts
+                        </button>
                     </div>
                     <div className="min-h-[400px] flex flex-col">
-                        <div role="tabpanel" id="panel-demo" aria-labelledby="tab-demo" hidden={activeVodTab !== 'demo'}>
+                        <div role="tabpanel" id="panel-demo" aria-labelledby="tab-demo" aria-hidden="false" style={{ display: activeVodTab === 'demo' ? 'block' : 'none' }}>
                            <DemoSection />
                         </div>
-                         <div role="tabpanel" id="panel-code" aria-labelledby="tab-code" hidden={activeVodTab !== 'code'}>
+                         <div role="tabpanel" id="panel-code" aria-labelledby="tab-code" aria-hidden="true" style={{ display: activeVodTab === 'code' ? 'block' : 'none' }}>
                            {displayedCode ? <CodeViewer code={displayedCode} /> : <div className="text-center text-gray-500 p-8">Code not available for this Vattle.</div>}
                         </div>
-                         <div role="tabpanel" id="panel-prompts" aria-labelledby="tab-prompts" hidden={activeVodTab !== 'prompts'}>
+                         <div role="tabpanel" id="panel-prompts" aria-labelledby="tab-prompts" aria-hidden="true" style={{ display: activeVodTab === 'prompts' ? 'block' : 'none' }}>
                             <PromptsSection />
                         </div>
                     </div>
