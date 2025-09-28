@@ -1,9 +1,10 @@
 import React from 'react';
 
 type IconProps = React.SVGProps<SVGSVGElement>;
+type ImageProps = React.ImgHTMLAttributes<HTMLImageElement>;
 
-export const LogoIcon: React.FC<IconProps> = (props) => (
-  <img src="/logo.png" alt="Vattles Logo" {...props} />
+export const LogoIcon: React.FC<ImageProps> = (props) => (
+  <img src="/vattles-logo.png" alt="Vattles Logo" {...props} />
 );
 
 export const TrophyIcon: React.FC<IconProps> = (props) => (

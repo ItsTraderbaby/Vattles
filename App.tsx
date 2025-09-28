@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Analytics } from "@vercel/analytics/react";
+import { TwentyFirstToolbar } from '@21st-extension/toolbar-react';
+import { ReactPlugin } from '@21st-extension/react';
 import { UserProfile, VattleConfig, Ratings, Tournament, ShowcaseItem, PortfolioItem, Achievement, Endorsement, Rivalry, PromptLibraryItem } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import './App.css';
 
 // Views
@@ -103,8 +106,8 @@ const mockTournaments: Tournament[] = [
 
 type View = 'auth' | 'arena' | 'battle' | 'voting' | 'profile' | 'rankings' | 'tournaments' | 'tournament_detail' | 'vibelabs' | 'api' | 'streaming' | 'onboarding';
 
-const App: React.FC = () => {
-    const [isAuthenticated, setIsAuthenticated] = useLocalStorage('vattles-auth', false);
+const AppContent: React.FC = () => {
+    const { user, signOut, loading } = useAuth();
     const [view, setView] = useState<View>('auth');
     const [userProfile, setUserProfile] = useLocalStorage<UserProfile>('vattles-user-profile', initialUserProfile);
     const [vattles, setVattles] = useLocalStorage<VattleConfig[]>('vattles-data', initialVattles);
@@ -114,7 +117,7 @@ const App: React.FC = () => {
 
     const [isCreateVattleModalOpen, setCreateVattleModalOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-    
+
     const [votedOn, setVotedOn] = useState<{[key: string]: boolean}>({});
 
     useEffect(() => {
@@ -145,17 +148,20 @@ const App: React.FC = () => {
     const [labInitialPrompt, setLabInitialPrompt] = useState<string>('');
 
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (loading) return; // Wait for auth to load
+
+        if (!user) {
             setView('auth');
         } else if (!userProfile.hasCompletedOnboarding) {
             setView('onboarding');
         } else if (view === 'auth' || view === 'onboarding') {
             setView('arena');
         }
-    }, [isAuthenticated, userProfile.hasCompletedOnboarding, view]);
+    }, [user, userProfile.hasCompletedOnboarding, view, loading]);
 
-    const handleLogin = () => setIsAuthenticated(true);
-    const handleLogout = () => setIsAuthenticated(false);
+    const handleLogout = async () => {
+        await signOut();
+    };
     
     const handleNavigate = (newView: View) => setView(newView);
 
@@ -318,7 +324,11 @@ const App: React.FC = () => {
     };
 
     const renderView = () => {
-        if (!isAuthenticated) return <AuthView onLogin={handleLogin} onOAuthLogin={(p) => handleLogin()} />;
+        if (loading) {
+            return <div className="min-h-screen bg-[#0D0B14] text-white flex items-center justify-center">Loading...</div>;
+        }
+
+        if (!user) return <AuthView />;
 
         switch(view) {
             case 'onboarding':
@@ -326,9 +336,9 @@ const App: React.FC = () => {
             case 'arena':
                 return <VattleArena userProfile={userProfile} vattles={vattles} onEnterBattle={handleEnterBattle} onViewVattle={handleViewVattle} onJoinVattle={handleJoinVattle} />;
             case 'battle':
-                return activeVattle ? <BattleRoom 
-                    vattle={activeVattle} 
-                    onExit={handleExitBattle} 
+                return activeVattle ? <BattleRoom
+                    vattle={activeVattle}
+                    onExit={handleExitBattle}
                     userProfile={userProfile}
                     onSavePrompt={handleSavePrompt}
                     onDeletePrompt={handleDeletePrompt}
@@ -337,11 +347,11 @@ const App: React.FC = () => {
             case 'voting':
                 return activeVattle ? <VotingView vattle={activeVattle} onVote={handleVote} hasVoted={!!votedOn[activeVattle.id]} onBack={() => setView('arena')} userProfile={userProfile} onEndorse={handleEndorse} onCloneToLab={handleCloneToLab} /> : <div className="text-white">Error: No vattle selected for viewing.</div>;
             case 'profile':
-                return <ProfileView 
-                            userProfile={userProfile} 
-                            onBack={() => setView('arena')} 
+                return <ProfileView
+                            userProfile={userProfile}
+                            onBack={() => setView('arena')}
                             onEdit={() => setIsProfileModalOpen(true)}
-                            onPinItem={handlePinItem} 
+                            onPinItem={handlePinItem}
                             onUnpinItem={handleUnpinItem}
                             onUpdateVibeAnalysis={handleUpdateVibeAnalysis}
                             onUpdateProfile={handleUpdateProfile}
@@ -366,7 +376,7 @@ const App: React.FC = () => {
     return (
         <div className="app-background">
             <div className="app-overlay"></div>
-            {isAuthenticated && view !== 'onboarding' && (
+            {user && view !== 'onboarding' && (
                 <Header
                     userProfile={userProfile}
                     onNavigate={(v) => handleNavigate(v as View)}
@@ -374,7 +384,7 @@ const App: React.FC = () => {
                     onLogout={handleLogout}
                 />
             )}
-            <main className={`app-main ${isAuthenticated && view !== 'onboarding' ? 'app-main-authenticated' : 'app-main-fullscreen'}`}>
+            <main className={`app-main ${user && view !== 'onboarding' ? 'app-main-authenticated' : 'app-main-fullscreen'}`}>
                 {renderView()}
             </main>
             <div className="app-modals">
@@ -382,7 +392,16 @@ const App: React.FC = () => {
                 <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} currentProfile={userProfile} onSave={handleSaveProfile} />
             </div>
             <Analytics />
+            <TwentyFirstToolbar config={{ plugins: [ReactPlugin] }} />
         </div>
+    );
+};
+
+const App: React.FC = () => {
+    return (
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
     );
 };
 

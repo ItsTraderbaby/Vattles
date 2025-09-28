@@ -1,0 +1,58 @@
+.shine-border-container {
+  --border-radius: attr(data-border-radius px, 8);
+  --border-width: attr(data-border-width px, 1);
+  --duration: attr(data-duration s, 14);
+  --color: attr(data-color, "#000000");
+
+  min-height: 60px;
+  width: fit-content;
+  min-width: 300px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--border-radius);
+  background: white;
+  padding: 12px;
+  color: black;
+  position: relative;
+}
+
+.dark .shine-border-container {
+  background: black;
+  color: white;
+}
+
+.shine-border-effect {
+  position: relative;
+}
+
+.shine-border-effect::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  aspect-ratio: 1;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius);
+  padding: var(--border-width);
+  will-change: background-position;
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  background-image: radial-gradient(transparent, transparent, var(--color), transparent, transparent);
+  background-size: 300% 300%;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shine-border-effect::before {
+    animation: shine var(--duration) ease-in-out infinite;
+  }
+}
+
+@keyframes shine {
+  0%, 100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+}
