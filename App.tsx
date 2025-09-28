@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Analytics } from "@vercel/analytics/react";
 import { UserProfile, VattleConfig, Ratings, Tournament, ShowcaseItem, PortfolioItem, Achievement, Endorsement, Rivalry, PromptLibraryItem } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import './App.css';
@@ -380,6 +381,7 @@ const App: React.FC = () => {
                 <CreateVattleModal isOpen={isCreateVattleModalOpen} onClose={() => setCreateVattleModalOpen(false)} onCreate={handleCreateVattle} isCoach={userProfile.role === 'coach'}/>
                 <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} currentProfile={userProfile} onSave={handleSaveProfile} />
             </div>
+            <Analytics />
         </div>
     );
 };
