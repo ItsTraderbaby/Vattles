@@ -214,7 +214,7 @@ const DemoSection: React.FC = () => {
 
       {mode === 'vod' ? (
         <>
-         <div
+      <div
   role="tablist"
   aria-label="VOD content"
   className="flex bg-gray-800/50 border border-gray-600 rounded-md p-1 mb-2"
@@ -232,47 +232,46 @@ const DemoSection: React.FC = () => {
         role="tab"
         id={`tab-${key}`}
         aria-controls={`panel-${key}`}
-        aria-selected={isActive ? "true" : "false"}
+        aria-selected={isActive ? 'true' : 'false'}
         tabIndex={isActive ? 0 : -1}
         onClick={() => setActiveVodTab(key)}
         className={`w-1/3 py-1.5 rounded transition-colors text-sm font-semibold flex items-center justify-center gap-2 ${
           isActive ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-gray-700'
         }`}
       >
-        <Icon className="h-4 w-4" aria-hidden /> {label}
+        <Icon className="h-4 w-4" aria-hidden="true" />
+        {label}
       </button>
     );
   })}
 </div>
 
+<div className="app-panel-tabpanel">
+  {(['demo', 'code', 'prompts'] as const).map((key) => {
+    const isActive = activeVodTab === key;
+    return (
+      <div
+        key={key}
+        role="tabpanel"
+        id={`panel-${key}`}
+        aria-labelledby={`tab-${key}`}
+        aria-hidden={isActive ? 'false' : 'true'}
+        hidden={!isActive}
+        data-tab={key}
+      >
+        {key === 'demo' && <DemoSection />}
+        {key === 'code' &&
+          (displayedCode ? (
+            <CodeViewer code={displayedCode} />
+          ) : (
+            <div className="text-center text-gray-500 p-8">Code not available for this Vattle.</div>
+          ))}
+        {key === 'prompts' && <PromptsSection />}
+      </div>
+    );
+  })}
+</div>
 
-          <div className="app-panel-tabpanel">
-            {(['demo', 'code', 'prompts'] as const).map((key) => {
-              const isActive = activeVodTab === key;
-              return (
-                <div
-                  key={key}
-                  role="tabpanel"
-                  id={`panel-${key}`}
-                  aria-labelledby={`tab-${key}`}
-                  aria-hidden={!isActive ? 'true' : undefined}
-                  hidden={!isActive}
-                  data-tab={key}
-                >
-                  {key === 'demo' && <DemoSection />}
-                  {key === 'code' &&
-                    (displayedCode ? (
-                      <CodeViewer code={displayedCode} />
-                    ) : (
-                      <div className="text-center text-gray-500 p-8">
-                        Code not available for this Vattle.
-                      </div>
-                    ))}
-                  {key === 'prompts' && <PromptsSection />}
-                </div>
-              );
-            })}
-          </div>
         </>
       ) : null}
     </div>

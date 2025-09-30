@@ -9,13 +9,16 @@ const TAKEN_USERNAMES = ['admin', 'root', 'vibemaster', 'codeninja', 'vattles'];
 interface OnboardingViewProps {
     userProfile: UserProfile;
     onComplete: (username: string, avatar: string) => void;
+    existingUsername?: string;
 }
 
-const OnboardingView: React.FC<OnboardingViewProps> = ({ userProfile, onComplete }) => {
-    const [username, setUsername] = useState('');
+const OnboardingView: React.FC<OnboardingViewProps> = ({ userProfile, onComplete, existingUsername }) => {
+    const [username, setUsername] = useState(existingUsername || '');
     const [avatar, setAvatar] = useState(userProfile.avatarUrl);
     const [validationStatus, setValidationStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid' | 'short'>('idle');
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const hasExistingUsername = existingUsername && existingUsername.trim().length > 0;
 
     // Debounced username validation
     useEffect(() => {
@@ -55,7 +58,7 @@ const OnboardingView: React.FC<OnboardingViewProps> = ({ userProfile, onComplete
     
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (validationStatus === 'valid') {
+        if (hasExistingUsername || validationStatus === 'valid') {
             onComplete(username, avatar);
         }
     };
@@ -80,8 +83,12 @@ const OnboardingView: React.FC<OnboardingViewProps> = ({ userProfile, onComplete
             <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(147, 51, 234, 0.15) 0%, rgba(13, 11, 20, 0) 70%)' }}></div>
             <main className="relative z-10 w-full max-w-lg bg-black/20 rounded-lg border border-gray-700/50 p-8 text-center">
                 <SparklesIcon className="h-16 w-16 mx-auto text-purple-400" />
-                <h1 className="font-orbitron text-3xl font-bold text-white mt-4">Welcome to Vattles!</h1>
-                <p className="text-gray-400 mt-2 mb-8">Let's set up your profile.</p>
+                <h1 className="font-orbitron text-3xl font-bold text-white mt-4">
+                    {hasExistingUsername ? `Welcome to Vattles, ${existingUsername}!` : 'Welcome to Vattles!'}
+                </h1>
+                <p className="text-gray-400 mt-2 mb-8">
+                    {hasExistingUsername ? 'Let\'s complete your profile with an avatar.' : 'Let\'s set up your profile.'}
+                </p>
 
                 <form onSubmit={handleSubmit} className="space-y-6 text-left">
                     <div className="flex flex-col items-center gap-4">
@@ -95,35 +102,37 @@ const OnboardingView: React.FC<OnboardingViewProps> = ({ userProfile, onComplete
                         <p className="text-sm text-gray-500">Click image to upload a new avatar.</p>
                     </div>
 
-                    <div>
-                        <label htmlFor="username" className="block text-sm font-medium text-purple-300 mb-2">Choose your unique @username</label>
-                        <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">@</span>
-                            <input
-                                type="text"
-                                id="username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-                                placeholder="YourVibeHandle"
-                                className="w-full bg-gray-800/50 border border-gray-600 rounded-md pl-8 pr-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                required
-                                minLength={3}
-                                maxLength={20}
-                                pattern="^[a-zA-Z0-9_]{3,20}$"
-                                ref={inputRef}
-                            />
+                    {!hasExistingUsername && (
+                        <div>
+                            <label htmlFor="username" className="block text-sm font-medium text-purple-300 mb-2">Choose your unique @username</label>
+                            <div className="relative">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">@</span>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                                    placeholder="YourVibeHandle"
+                                    className="w-full bg-gray-800/50 border border-gray-600 rounded-md pl-8 pr-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    required
+                                    minLength={3}
+                                    maxLength={20}
+                                    pattern="^[a-zA-Z0-9_]{3,20}$"
+                                    ref={inputRef}
+                                />
+                            </div>
+                            <div className="h-5 mt-2 ml-1">
+                                {getValidationMessage()}
+                            </div>
                         </div>
-                        <div className="h-5 mt-2 ml-1">
-                            {getValidationMessage()}
-                        </div>
-                    </div>
+                    )}
                     
-                    <button 
+                    <button
                         type="submit"
-                        disabled={validationStatus !== 'valid'}
+                        disabled={!hasExistingUsername && validationStatus !== 'valid'}
                         className="w-full py-3 mt-4 font-orbitron text-lg font-bold rounded-lg transition-all duration-300 bg-teal-500 text-white shadow-lg shadow-teal-500/30 hover:bg-teal-400 hover:shadow-teal-400/50 disabled:bg-gray-700 disabled:shadow-none disabled:cursor-not-allowed"
                     >
-                        Complete Setup
+                        {hasExistingUsername ? 'Complete Setup' : 'Complete Setup'}
                     </button>
                 </form>
             </main>

@@ -61,7 +61,7 @@ const AuthView: React.FC = () => {
         }
     };
 
-    const inputStyles = "w-full bg-gray-800/50 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500";
+    const inputStyles = "w-full bg-gray-800/50 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent";
     const buttonStyles = "w-full py-3 mt-4 font-orbitron text-lg font-bold rounded-lg transition-all duration-300";
 
     return (
@@ -70,7 +70,7 @@ const AuthView: React.FC = () => {
 
             <div className="relative z-10 w-full max-w-screen-xl mx-auto p-4 sm:p-6 lg:p-8">
                 <header className="text-center mb-24">
-                    <LogoIcon className="h-32 w-32 sm:h-40 sm:w-40 mx-auto" />
+                    <LogoIcon className="h-48 w-48 sm:h-64 sm:w-64 mx-auto" style={{ background: 'none' }} />
                     <h1 className="font-orbitron text-4xl sm:text-5xl font-bold tracking-widest text-white uppercase mt-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-cyan-300 vattles-title-shadow">
                     VATTLES
                     </h1>
@@ -103,7 +103,7 @@ const AuthView: React.FC = () => {
                         {error}
                     </div>
                 )}
-                <form onSubmit={handleAuthAction} className="space-y-4">
+                <form onSubmit={handleAuthAction} className="space-y-4" key={authMode}>
                     {authMode === 'signup' && (
                          <div>
                             <label htmlFor="username" className="block text-sm font-medium text-purple-300 mb-2">Username</label>
@@ -115,6 +115,8 @@ const AuthView: React.FC = () => {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
+                                autoComplete="username"
+                                spellCheck="false"
                             />
                         </div>
                     )}
@@ -128,6 +130,8 @@ const AuthView: React.FC = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
+                            autoComplete="email"
+                            spellCheck="false"
                         />
                     </div>
                     <div>
@@ -140,6 +144,8 @@ const AuthView: React.FC = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            autoComplete="current-password"
+                            spellCheck="false"
                         />
                     </div>
                     <button
@@ -172,7 +178,14 @@ const AuthView: React.FC = () => {
                     </button>
                 </div>
                  <div className="text-center mt-6">
-                    <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="text-sm text-purple-300 hover:text-purple-200 transition-colors">
+                    <button onClick={() => {
+                        setAuthMode(authMode === 'login' ? 'signup' : 'login');
+                        setError(null);
+                        // Reset form fields when switching modes to prevent state conflicts
+                        setEmail('');
+                        setPassword('');
+                        setUsername('');
+                    }} className="text-sm text-purple-300 hover:text-purple-200 transition-colors">
                         {authMode === 'login' ? 'Don\'t have an account? Sign Up' : 'Already have an account? Log In'}
                     </button>
                 </div>

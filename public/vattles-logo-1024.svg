@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradients for the V -->
+    <linearGradient id="gradLeft" x1="256" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00C0FF"/>
+      <stop offset="50%" stop-color="#7A3BFE"/>
+      <stop offset="100%" stop-color="#FF48D1"/>
+    </linearGradient>
+    <linearGradient id="gradRight" x1="768" y1="128" x2="512" y2="896" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF94A"/>
+      <stop offset="50%" stop-color="#7DFFB5"/>
+      <stop offset="100%" stop-color="#00E5FF"/>
+    </linearGradient>
+
+    <!-- Glow filter -->
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Particle symbol -->
+    <circle id="pDot" r="3" fill="url(#pGrad)"/>
+    <radialGradient id="pGrad" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Pattern: simple circuit lines -->
+    <pattern id="circuit" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M0 8 H8 V0 M8 16 V8 H16" stroke="#8DE1FF" stroke-width="1" fill="none" stroke-linecap="round"/>
+    </pattern>
+
+    <!-- Pattern: fluid swirls -->
+    <pattern id="swirls" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M0,15 C10,5 20,25 30,15" stroke="#E6FF9A" stroke-width="1.2" fill="none"/>
+      <path d="M0,5 C8,15 22,15 30,5" stroke="#B6FFD8" stroke-width="1" fill="none" opacity="0.7"/>
+    </pattern>
+
+    <!-- Rounded rectangle helper -->
+    <clipPath id="kbClip">
+      <rect x="362" y="360" width="300" height="110" rx="28" ry="28"/>
+    </clipPath>
+  </defs>
+
+  <!-- Left arm of V -->
+  <path d="M210 190 L450 190 L535 610 C515 710 465 790 395 845 L210 845 L210 190 Z"
+        fill="url(#gradLeft)" filter="url(#softGlow)"/>
+  <!-- Left circuitry overlay -->
+  <path d="M240 220 L420 220 L495 600 C480 680 440 750 380 790 L240 790 Z"
+        fill="url(#circuit)" opacity="0.25"/>
+
+  <!-- Right arm of V -->
+  <path d="M814 190 L574 190 L489 610 C509 710 559 790 629 845 L814 845 L814 190 Z"
+        fill="url(#gradRight)" filter="url(#softGlow)"/>
+  <!-- Right swirl overlay -->
+  <path d="M784 220 L604 220 L529 600 C544 680 584 750 644 790 L784 790 Z"
+        fill="url(#swirls)" opacity="0.25"/>
+
+  <!-- Keyboard -->
+  <rect x="362" y="360" width="300" height="110" rx="28" ry="28" fill="#0EC5FF" opacity="0.95" filter="url(#softGlow)"/>
+  <g clip-path="url(#kbClip)">
+    <!-- Key rows -->
+    <g transform="translate(382 382)" fill="#FFFFFF" opacity="0.9">
+      <!-- Top row -->
+      <g>
+        <rect x="0"   y="0" width="24" height="14" rx="4"/>
+        <rect x="32"  y="0" width="24" height="14" rx="4"/>
+        <rect x="64"  y="0" width="24" height="14" rx="4"/>
+        <rect x="96"  y="0" width="24" height="14" rx="4"/>
+        <rect x="128" y="0" width="24" height="14" rx="4"/>
+        <rect x="160" y="0" width="24" height="14" rx="4"/>
+        <rect x="192" y="0" width="24" height="14" rx="4"/>
+        <rect x="224" y="0" width="24" height="14" rx="4"/>
+      </g>
+      <!-- Middle row -->
+      <g transform="translate(8 22)">
+        <rect x="0"   y="0" width="24" height="14" rx="4"/>
+        <rect x="32"  y="0" width="24" height="14" rx="4"/>
+        <rect x="64"  y="0" width="24" height="14" rx="4"/>
+        <rect x="96"  y="0" width="24" height="14" rx="4"/>
+        <rect x="128" y="0" width="24" height="14" rx="4"/>
+        <rect x="160" y="0" width="24" height="14" rx="4"/>
+        <rect x="192" y="0" width="24" height="14" rx="4"/>
+        <rect x="224" y="0" width="24" height="14" rx="4"/>
+      </g>
+      <!-- Bottom row -->
+      <g transform="translate(24 44)">
+        <rect x="0"   y="0" width="24" height="14" rx="4"/>
+        <rect x="32"  y="0" width="24" height="14" rx="4"/>
+        <rect x="64"  y="0" width="24" height="14" rx="4"/>
+        <rect x="96"  y="0" width="24" height="14" rx="4"/>
+        <rect x="128" y="0" width="24" height="14" rx="4"/>
+        <rect x="160" y="0" width="24" height="14" rx="4"/>
+        <rect x="192" y="0" width="54" height="14" rx="7"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Mouse -->
+  <g transform="translate(510 480)">
+    <rect x="-36" y="0" width="72" height="110" rx="36" fill="#00D8FF" opacity="0.95" filter="url(#softGlow)"/>
+    <line x1="0" y1="20" x2="0" y2="55" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <!-- Cable from keyboard to mouse -->
+  <path d="M512 470 C512 500 512 500 512 500" stroke="#7CE8FF" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Particles around the V edges -->
+  <g opacity="0.8">
+    <!-- Left edge particles -->
+    <use href="#pDot" x="260" y="230"/>
+    <use href="#pDot" x="300" y="270"/>
+    <use href="#pDot" x="340" y="230"/>
+    <use href="#pDot" x="380" y="270"/>
+    <use href="#pDot" x="415" y="240"/>
+    <use href="#pDot" x="350" y="700"/>
+    <use href="#pDot" x="270" y="760"/>
+    <use href="#pDot" x="320" y="820"/>
+    <!-- Right edge particles -->
+    <use href="#pDot" x="765" y="230"/>
+    <use href="#pDot" x="720" y="270"/>
+    <use href="#pDot" x="680" y="230"/>
+    <use href="#pDot" x="640" y="270"/>
+    <use href="#pDot" x="610" y="740"/>
+    <use href="#pDot" x="700" y="790"/>
+    <use href="#pDot" x="760" y="830"/>
+  </g>
+</svg>

@@ -9,49 +9,63 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
-  const modalRef = useRef<HTMLDivElement>(null);
+   const modalRef = useRef<HTMLDivElement>(null);
+   const hasFocusedRef = useRef(false);
 
-  useEffect(() => {
-    if (!isOpen) return;
+   useEffect(() => {
+     if (!isOpen) {
+       hasFocusedRef.current = false;
+       return;
+     }
 
-    const modalNode = modalRef.current;
-    if (!modalNode) return;
+     const modalNode = modalRef.current;
+     if (!modalNode) return;
 
-    const focusableElements = modalNode.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
+     const focusableElements = modalNode.querySelectorAll<HTMLElement>(
+       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+     );
+     const firstElement = focusableElements[0];
+     const lastElement = focusableElements[focusableElements.length - 1];
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Tab') {
-        if (event.shiftKey) {
-          if (document.activeElement === firstElement) {
-            lastElement?.focus();
-            event.preventDefault();
-          }
-        } else {
-          if (document.activeElement === lastElement) {
-            firstElement?.focus();
-            event.preventDefault();
-          }
-        }
-      }
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
+     const handleKeyDown = (event: KeyboardEvent) => {
+       if (event.key === 'Tab') {
+         if (event.shiftKey) {
+           if (document.activeElement === firstElement) {
+             lastElement?.focus();
+             event.preventDefault();
+           }
+         } else {
+           if (document.activeElement === lastElement) {
+             firstElement?.focus();
+             event.preventDefault();
+           }
+         }
+       }
+       if (event.key === 'Escape') {
+         onClose();
+       }
+     };
 
-    // Delay focus slightly to allow for modal animation
-    const focusTimeout = setTimeout(() => firstElement?.focus(), 100);
-    
-    window.addEventListener('keydown', handleKeyDown);
+     // Only auto-focus when modal first opens, not on every re-render
+     if (!hasFocusedRef.current && firstElement) {
+       const focusTimeout = setTimeout(() => {
+         firstElement?.focus();
+         hasFocusedRef.current = true;
+       }, 100);
 
-    return () => {
-      clearTimeout(focusTimeout);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, onClose]);
+       window.addEventListener('keydown', handleKeyDown);
+
+       return () => {
+         clearTimeout(focusTimeout);
+         window.removeEventListener('keydown', handleKeyDown);
+       };
+     } else {
+       window.addEventListener('keydown', handleKeyDown);
+       return () => {
+         window.removeEventListener('keydown', handleKeyDown);
+       };
+     }
+   }, [isOpen, onClose]);
 
 
   if (!isOpen) return null;

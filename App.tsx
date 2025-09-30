@@ -152,10 +152,27 @@ const AppContent: React.FC = () => {
 
         if (!user) {
             setView('auth');
-        } else if (!userProfile.hasCompletedOnboarding) {
-            setView('onboarding');
-        } else if (view === 'auth' || view === 'onboarding') {
-            setView('arena');
+        } else {
+            // Check if user already has a username from signup
+            const existingUsername = user.user_metadata?.username;
+            const hasExistingUsername = existingUsername && existingUsername.trim().length > 0;
+
+            // If user has completed onboarding OR already has a username from signup, go to arena
+            if (userProfile.hasCompletedOnboarding || hasExistingUsername) {
+                // If they have a username but haven't completed onboarding, complete it automatically
+                if (hasExistingUsername && !userProfile.hasCompletedOnboarding) {
+                    setUserProfile(prev => ({
+                        ...prev,
+                        name: existingUsername,
+                        hasCompletedOnboarding: true,
+                    }));
+                }
+                if (view === 'auth' || view === 'onboarding') {
+                    setView('arena');
+                }
+            } else {
+                setView('onboarding');
+            }
         }
     }, [user, userProfile.hasCompletedOnboarding, view, loading]);
 
@@ -332,7 +349,11 @@ const AppContent: React.FC = () => {
 
         switch(view) {
             case 'onboarding':
-                return <OnboardingView userProfile={userProfile} onComplete={handleCompleteOnboarding} />;
+                return <OnboardingView
+                    userProfile={userProfile}
+                    onComplete={handleCompleteOnboarding}
+                    existingUsername={user?.user_metadata?.username}
+                />;
             case 'arena':
                 return <VattleArena userProfile={userProfile} vattles={vattles} onEnterBattle={handleEnterBattle} onViewVattle={handleViewVattle} onJoinVattle={handleJoinVattle} />;
             case 'battle':
