@@ -175,9 +175,14 @@ const VattleArena: React.FC<VattleArenaProps> = ({ userProfile, vattles, onEnter
     const winRate = userProfile.stats.vattlesPlayed > 0 ? ((userProfile.stats.wins / userProfile.stats.vattlesPlayed) * 100).toFixed(0) : 0;
     
     const [activeTab, setActiveTab] = useState<'foryou' | 'live'>('foryou');
-    
+
     const featuredVattles = vattles.filter(v => v.isFeatured && v.status === 'active');
-    const regularVattles = vattles.filter(v => !v.isFeatured);
+
+    // For You section - showcase vattles
+    const forYouVattles = vattles.filter(v => v.id.startsWith('vattle-foryou'));
+
+    // Live & Recent section - showcase vattles
+    const liveAndRecentVattles = vattles.filter(v => v.id.startsWith('vattle-live'));
 
     const [recommendedVattles, setRecommendedVattles] = useState<VattleConfig[]>([]);
     const [lastRecTimestamp, setLastRecTimestamp] = useState(0);
@@ -186,13 +191,13 @@ const VattleArena: React.FC<VattleArenaProps> = ({ userProfile, vattles, onEnter
         const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
         const now = Date.now();
         if (activeTab === 'foryou' && (recommendedVattles.length === 0 || now - lastRecTimestamp > CACHE_DURATION)) {
-            const recommendations = getRecommendedVattles(userProfile, regularVattles);
+            const recommendations = getRecommendedVattles(userProfile, forYouVattles);
             setRecommendedVattles(recommendations);
             setLastRecTimestamp(now);
         }
-    }, [activeTab, userProfile, regularVattles, lastRecTimestamp, recommendedVattles.length]);
-    
-    const displayedVattles = activeTab === 'foryou' ? recommendedVattles : regularVattles;
+    }, [activeTab, userProfile, forYouVattles, lastRecTimestamp, recommendedVattles.length]);
+
+    const displayedVattles = activeTab === 'foryou' ? forYouVattles : liveAndRecentVattles;
 
 
     return (
@@ -215,6 +220,14 @@ const VattleArena: React.FC<VattleArenaProps> = ({ userProfile, vattles, onEnter
                         <p className="text-xs text-gray-400 uppercase tracking-wider">Vattles</p>
                         <p className="text-2xl font-bold font-orbitron text-white">{userProfile.stats.vattlesPlayed}</p>
                     </div>
+                     <div>
+                        <p className="text-xs text-gray-400 uppercase tracking-wider">Lessons Given</p>
+                        <p className="text-2xl font-bold font-orbitron text-white">{userProfile.stats.lessonsGiven || 0}</p>
+                    </div>
+                     <div>
+                        <p className="text-xs text-gray-400 uppercase tracking-wider">Classes Taken</p>
+                        <p className="text-2xl font-bold font-orbitron text-white">{userProfile.stats.classesTaken || 0}</p>
+                    </div>
                 </div>
             </section>
             
@@ -229,36 +242,106 @@ const VattleArena: React.FC<VattleArenaProps> = ({ userProfile, vattles, onEnter
                 </section>
             )}
 
-            <section>
-                 <div role="tablist" aria-label="Vattle feeds" className="flex border-b border-gray-700 mb-6">
-                    <button role="tab" id="tab-foryou" aria-controls="panel-foryou" aria-selected={activeTab === 'foryou'} onClick={() => setActiveTab('foryou')} className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${activeTab === 'foryou' ? 'text-purple-300 border-purple-400' : 'text-gray-400 border-transparent hover:text-white'}`}>
-                        <SparklesIcon className="h-5 w-5" /> For You
-                    </button>
-                    <button role="tab" id="tab-live" aria-controls="panel-live" aria-selected={activeTab === 'live'} onClick={() => setActiveTab('live')} className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${activeTab === 'live' ? 'text-purple-300 border-purple-400' : 'text-gray-400 border-transparent hover:text-white'}`}>
-                        <SignalIcon className="h-5 w-5" /> Live & Recent
-                    </button>
-                </div>
-                
-                <h3 className="sr-only">{activeTab === 'foryou' ? 'For You' : 'Live Vattles & Sessions'}</h3>
+         <section>
+  {/* Tabs */}
+  <div
+    role="tablist"
+    aria-label="Vattle feeds"
+    className="flex border-b border-gray-700 mb-6"
+  >
+    {([
+      { key: 'foryou' as const, label: 'For You', Icon: SparklesIcon },
+      { key: 'live' as const, label: 'Live & Recent', Icon: SignalIcon },
+    ]).map(({ key, label, Icon }) => {
+      const isActive = activeTab === key;
+      return (
+        <button
+          key={key}
+          role="tab"
+          id={`tab-${key}`}
+          aria-controls={`panel-${key}`}
+          aria-selected={isActive}
+          tabIndex={isActive ? 0 : -1}
+          onClick={() => setActiveTab(key)}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+            isActive
+              ? 'text-purple-300 border-purple-400'
+              : 'text-gray-400 border-transparent hover:text-white'
+          }`}
+        >
+          <Icon className="h-5 w-5" aria-hidden="true" />
+          {label}
+        </button>
+      );
+    })}
+  </div>
 
-                {displayedVattles.length > 0 ? (
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {displayedVattles.map(vattle => (
-                            <VattleCard key={vattle.id} vattle={vattle} onEnter={() => onEnterBattle(vattle)} onView={() => onViewVattle(vattle)} onJoin={() => setVattleToJoin(vattle)} isCreator={userProfile.name === vattle.creatorName} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-16 bg-black/10 rounded-lg border border-dashed border-gray-700">
-                        <SparklesIcon className="h-12 w-12 mx-auto text-gray-600"/>
-                        <p className="mt-4 font-semibold text-gray-400">
-                            {activeTab === 'foryou' ? 'No Recommendations Yet' : 'No Vattles Available'}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                            {activeTab === 'foryou' ? 'Play some Vattles to build your profile!' : 'Why not create one?'}
-                        </p>
-                    </div>
-                )}
-            </section>
+  {/* Panels */}
+  {/* For You */}
+  <div
+    role="tabpanel"
+    id="panel-foryou"
+    aria-labelledby="tab-foryou"
+    hidden={activeTab !== 'foryou'}
+  >
+    <h3 className="sr-only">For You</h3>
+
+    {(activeTab === 'foryou' && displayedVattles.length > 0) ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {displayedVattles.map((vattle) => (
+          <VattleCard
+            key={vattle.id}
+            vattle={vattle}
+            onEnter={() => onEnterBattle(vattle)}
+            onView={() => onViewVattle(vattle)}
+            onJoin={() => setVattleToJoin(vattle)}
+            isCreator={userProfile.name === vattle.creatorName}
+          />
+        ))}
+      </div>
+    ) : (
+      <div className="text-center py-16 bg-black/10 rounded-lg border border-dashed border-gray-700">
+        <SparklesIcon className="h-12 w-12 mx-auto text-gray-600" aria-hidden="true" />
+        <p className="mt-4 font-semibold text-gray-400">No Recommendations Yet</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Play some Vattles to build your profile!
+        </p>
+      </div>
+    )}
+  </div>
+
+  {/* Live & Recent */}
+  <div
+    role="tabpanel"
+    id="panel-live"
+    aria-labelledby="tab-live"
+    hidden={activeTab !== 'live'}
+  >
+    <h3 className="sr-only">Live Vattles & Sessions</h3>
+
+    {(activeTab === 'live' && displayedVattles.length > 0) ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {displayedVattles.map((vattle) => (
+          <VattleCard
+            key={vattle.id}
+            vattle={vattle}
+            onEnter={() => onEnterBattle(vattle)}
+            onView={() => onViewVattle(vattle)}
+            onJoin={() => setVattleToJoin(vattle)}
+            isCreator={userProfile.name === vattle.creatorName}
+          />
+        ))}
+      </div>
+    ) : (
+      <div className="text-center py-16 bg-black/10 rounded-lg border border-dashed border-gray-700">
+        <SignalIcon className="h-12 w-12 mx-auto text-gray-600" aria-hidden="true" />
+        <p className="mt-4 font-semibold text-gray-400">No Vattles Available</p>
+        <p className="text-sm text-gray-500 mt-1">Why not create one?</p>
+      </div>
+    )}
+  </div>
+</section>
+
 
              <Modal
                 isOpen={!!vattleToJoin}

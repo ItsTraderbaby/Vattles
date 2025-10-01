@@ -4,15 +4,15 @@ import { LogoIcon, TrophyIcon, UserIcon, ShieldCheckIcon, StarIcon, SparklesIcon
 
 const VIBE_CATEGORIES: LeaderboardUser['mainVibe'][] = ['Cyberpunk', 'Sci-Fi', 'Minimalist', 'Retro', 'Nature'];
 
-const mockLeaderboardData: LeaderboardUser[] = Array.from({ length: 100 }, (_, i) => ({
+const mockLeaderboardData: LeaderboardUser[] = Array.from({ length: 5 }, (_, i) => ({
     id: `user-${i + 1}`,
     rank: i + 1,
     username: `Vattler_${String(i + 1).padStart(3, '0')}`,
     avatarUrl: `https://i.pravatar.cc/80?u=user${i + 1}`,
     status: i === 0 ? 'pro' : (i > 0 && i < 4) ? 'featured' : undefined,
     mmr: 2500 - i * 15,
-    wins: Math.floor(Math.random() * 50) + 10,
-    losses: Math.floor(Math.random() * 30) + 5,
+    wins: Math.floor(Math.random() * 5) + 1, // Max 5 wins each
+    losses: Math.floor(Math.random() * 3) + 1,
     mainVibe: VIBE_CATEGORIES[i % VIBE_CATEGORIES.length],
 }));
 
@@ -59,11 +59,59 @@ const RankingsView: React.FC<RankingsViewProps> = ({ onBack }) => {
         </tr>
     );
 
-    const TabButton: React.FC<{ label: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; id: string; controls: string; }> = ({ label, icon, isActive, onClick, id, controls }) => (
-        <button role="tab" id={id} aria-controls={controls} aria-selected={isActive} onClick={onClick} className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${isActive ? 'text-purple-300 border-purple-400' : 'text-gray-400 border-transparent hover:text-white'}`}>
-            {icon} {label}
-        </button>
-    );
+   // Drop-in replacement for TabButton (paste over your current definition)
+const TabButton: React.FC<{
+  label: string;
+  icon: React.ReactNode;
+  isActive: boolean;
+  onClick: () => void;
+  id: string;
+  controls: string;
+}> = ({ label, icon, isActive, onClick, id, controls }) => {
+  // Keyboard roving tabindex: Left/Right/Home/End move focus between tabs
+  const onKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = (e) => {
+    const key = e.key;
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) return;
+
+    const tablist = (e.currentTarget.closest('[role="tablist"]') as HTMLElement) || null;
+    if (!tablist) return;
+
+    const tabs = Array.from(tablist.querySelectorAll<HTMLElement>('[role="tab"]'));
+    const currentIndex = tabs.indexOf(e.currentTarget);
+    if (currentIndex === -1) return;
+
+    let nextIndex = currentIndex;
+    if (key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+    if (key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+    if (key === 'Home') nextIndex = 0;
+    if (key === 'End') nextIndex = tabs.length - 1;
+
+    const nextTab = tabs[nextIndex];
+    nextTab?.focus();
+    // Do not trigger click automatically on arrow nav; let Enter/Space (default button behavior) activate.
+    e.preventDefault();
+  };
+
+  return (
+    <button
+      role="tab"
+      id={id}
+      aria-controls={controls}
+      aria-selected={isActive ? 'true' : 'false'}
+      tabIndex={isActive ? 0 : -1}
+      type="button"
+      onClick={onClick}
+      onKeyDown={onKeyDown}
+      className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+        isActive ? 'text-purple-300 border-purple-400' : 'text-gray-400 border-transparent hover:text-white'
+      }`}
+    >
+      {/* Ensure the icon you pass already has aria-hidden="true" (yours do) */}
+      {icon} {label}
+    </button>
+  );
+};
+
 
     return (
         <div className="w-full max-w-screen-lg mx-auto animate-fade-in">

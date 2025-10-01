@@ -3,6 +3,7 @@ import { VattleConfig, AppSubmission, Ratings, RatingCategory, UserProfile, Coac
 import AppPanel from './AppPanel';
 import Timer from './Timer';
 import { TrophyIcon, BookOpenIcon, ClockIcon, HandThumbUpIcon, GithubIcon, CloneIcon } from './icons';
+import { DatabaseService } from '../src/lib/supabase';
 
 const mockFinalCode = {
     html: `<!DOCTYPE html>
@@ -398,7 +399,7 @@ const VotingView: React.FC<VotingViewProps> = ({ vattle, onVote, hasVoted, onBac
                     {appA.githubRepoUrl && <a href={appA.githubRepoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-gray-300 hover:text-white bg-gray-800/80 px-2 py-1 rounded-md"><GithubIcon className="h-4 w-4"/> View on GitHub</a>}
                 </div>
                 <div className="flex flex-col gap-2">
-                    <input type="range" min={-1} max={commits.length -1} value={timelineIndex} onChange={e => setTimelineIndex(Number(e.target.value))} className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                    <input type="range" min={-1} max={commits.length -1} value={timelineIndex} onChange={e => setTimelineIndex(Number(e.target.value))} className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500" aria-label="Timeline scrubber" />
                     <div className="flex justify-between text-xs text-gray-400">
                         <span>Start</span>
                         <span>End</span>

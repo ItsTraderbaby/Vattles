@@ -41,6 +41,12 @@ export interface UserProfile {
     vattlesPlayed: number;
     wins: number;
     losses: number;
+    lessonsGiven: number;
+    classesTaken: number;
+    totalVotes?: number;
+    averageRating?: number;
+    mmr?: number;
+    winRate?: number;
   };
   portfolio: PortfolioItem[];
   showcase: ShowcaseItem[];
@@ -55,6 +61,11 @@ export interface UserProfile {
       title: string;
       isPlaying: boolean;
   };
+  // New fields for production-ready features
+  skillEndorsements?: SkillEndorsement[];
+  unlockedAchievements?: string[]; // Achievement IDs
+  rivalryHistory?: RivalryMatch[];
+  votingHistory?: VotingRecord[];
 }
 
 export interface PortfolioItem {
@@ -193,4 +204,30 @@ export interface TournamentParticipant {
     name: string;
     avatarUrl: string;
     seed: number;
+}
+
+// Production-ready feature types
+export interface SkillEndorsement {
+    skill: string;
+    endorsedBy: string[];
+    totalCount: number;
+    lastUpdated: string;
+}
+
+export interface RivalryMatch {
+    id: string;
+    opponentId: string;
+    opponentName: string;
+    vattleId: string;
+    result: 'win' | 'loss' | 'draw';
+    date: string;
+    theme: string;
+}
+
+export interface VotingRecord {
+    vattleId: string;
+    submissionId: string;
+    rating: Ratings;
+    date: string;
+    submissionTitle: string;
 }

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Analytics } from "@vercel/analytics/react";
 import { TwentyFirstToolbar } from '@21st-extension/toolbar-react';
 import { ReactPlugin } from '@21st-extension/react';
-import { UserProfile, VattleConfig, Ratings, Tournament, ShowcaseItem, PortfolioItem, Achievement, Endorsement, Rivalry, PromptLibraryItem } from './types';
+import { UserProfile, VattleConfig, Ratings, Tournament, ShowcaseItem, PortfolioItem, Achievement, Endorsement, Rivalry, PromptLibraryItem, ProfileTheme } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { DatabaseService } from './src/lib/supabase';
 import './App.css';
 
 // Views
@@ -25,6 +26,7 @@ import OnboardingView from './components/OnboardingView';
 import Header from './components/Header';
 import CreateVattleModal from './components/CreateVattleModal';
 import ProfileModal from './components/ProfileModal';
+import Alfred, { AlfredCustomization } from './components/Alfred';
 
 const mockPortfolio: PortfolioItem[] = [
     { vattleId: 'vattle-3', title: 'Galactic Glider', theme: 'Vaporwave Space', date: '2023-10-22', opponentName: 'CodeNinja', result: 'win' },
@@ -63,9 +65,11 @@ const initialUserProfile: UserProfile = {
     status: 'pro',
     hasCompletedOnboarding: false,
     stats: {
-        vattlesPlayed: 28,
-        wins: 22,
-        losses: 6,
+        vattlesPlayed: 0,
+        wins: 0,
+        losses: 0,
+        lessonsGiven: 0,
+        classesTaken: 0,
     },
     portfolio: mockPortfolio,
     showcase: mockShowcase,
@@ -83,14 +87,23 @@ const initialUserProfile: UserProfile = {
 };
 
 const initialVattles: VattleConfig[] = [
+  // Featured spotlight vattle
   { id: 'vattle-featured-1', theme: 'Quantum Realms UI', creatorName: 'GlitchArtisan', invitedOpponent: 'CodeNinja', status: 'active', mode: 'standard', opponent: 'player', timeLimit: 120, isFeatured: true, startTime: Date.now() - 5 * 60 * 1000 },
-  { id: 'vattle-rivalry-1', theme: 'Synthwave Grudge Match', creatorName: 'Vibemaster', invitedOpponent: 'CodeNinja', status: 'active', mode: 'standard', opponent: 'player', timeLimit: 60, isRivalryMatch: true, startTime: Date.now() - 15 * 60 * 1000 },
-  { id: 'vattle-0', theme: 'Synthwave Dreams', creatorName: 'GlitchArtisan', invitedOpponent: 'Open Invite', status: 'pending', mode: 'standard', opponent: 'player', timeLimit: 60 },
-  { id: 'vattle-1', theme: 'Cyberpunk Detective', creatorName: 'CodeNinja', invitedOpponent: 'GlitchArtisan', status: 'active', mode: 'standard', opponent: 'player', timeLimit: 60, startTime: Date.now() - 10 * 60 * 1000, isTrending: true },
-  { id: 'vattle-2', theme: 'Minimalist Weather App', creatorName: 'Vibemaster', studentName: 'NewbieDev', invitedOpponent: 'NewbieDev', status: 'active', mode: 'coaching', opponent: 'player', timeLimit: 90, startTime: Date.now() - 30 * 60 * 1000 },
-  { id: 'vattle-3', theme: 'Vaporwave Space', creatorName: 'Vibemaster', invitedOpponent: 'CodeNinja', status: 'voting', mode: 'standard', opponent: 'player', timeLimit: 60, startTime: Date.now() - 2 * 24 * 60 * 60 * 1000 },
-  { id: 'vattle-4', theme: '8-bit Arcade', creatorName: 'PixelPusher', invitedOpponent: 'Vibemaster', status: 'completed', mode: 'standard', opponent: 'player', timeLimit: 45, winner: 'PixelPusher', startTime: Date.now() - 5 * 24 * 60 * 60 * 1000 },
-  { id: 'vattle-5', theme: 'Intro to React Hooks', creatorName: 'Vibemaster', studentName: 'JaneDev', invitedOpponent: 'JaneDev', status: 'completed', mode: 'coaching', opponent: 'player', timeLimit: 120, winner: 'JaneDev', startTime: Date.now() - 6 * 24 * 60 * 60 * 1000 },
+
+  // For You section - one of each type for showcase
+  { id: 'vattle-foryou-1', theme: 'Cyberpunk Detective', creatorName: 'CodeNinja', invitedOpponent: 'GlitchArtisan', status: 'active', mode: 'standard', opponent: 'player', timeLimit: 60, startTime: Date.now() - 10 * 60 * 1000, isTrending: true },
+  { id: 'vattle-foryou-2', theme: 'Minimalist Weather App', creatorName: 'Vibemaster', studentName: 'NewbieDev', invitedOpponent: 'NewbieDev', status: 'active', mode: 'coaching', opponent: 'player', timeLimit: 90, startTime: Date.now() - 30 * 60 * 1000 },
+  { id: 'vattle-foryou-3', theme: 'Vaporwave Space', creatorName: 'Vibemaster', invitedOpponent: 'CodeNinja', status: 'voting', mode: 'standard', opponent: 'player', timeLimit: 60, startTime: Date.now() - 2 * 24 * 60 * 60 * 1000 },
+  { id: 'vattle-foryou-4', theme: '8-bit Arcade', creatorName: 'PixelPusher', invitedOpponent: 'Vibemaster', status: 'completed', mode: 'standard', opponent: 'player', timeLimit: 45, winner: 'PixelPusher', startTime: Date.now() - 5 * 24 * 60 * 60 * 1000 },
+  { id: 'vattle-foryou-5', theme: 'Intro to React Hooks', creatorName: 'Vibemaster', studentName: 'JaneDev', invitedOpponent: 'JaneDev', status: 'completed', mode: 'coaching', opponent: 'player', timeLimit: 120, winner: 'JaneDev', startTime: Date.now() - 6 * 24 * 60 * 60 * 1000 },
+
+  // Live & Recent section - one of each type for showcase
+  { id: 'vattle-live-1', theme: 'Synthwave Dreams', creatorName: 'GlitchArtisan', invitedOpponent: 'Open Invite', status: 'pending', mode: 'standard', opponent: 'player', timeLimit: 60 },
+  { id: 'vattle-live-2', theme: 'Rivalry Match', creatorName: 'Vibemaster', invitedOpponent: 'CodeNinja', status: 'active', mode: 'standard', opponent: 'player', timeLimit: 60, isRivalryMatch: true, startTime: Date.now() - 15 * 60 * 1000 },
+  { id: 'vattle-live-3', theme: 'Coaching Session', creatorName: 'Vibemaster', studentName: 'StudentDev', invitedOpponent: 'StudentDev', status: 'active', mode: 'coaching', opponent: 'player', timeLimit: 90, startTime: Date.now() - 20 * 60 * 1000 },
+  { id: 'vattle-live-4', theme: 'Completed Coaching', creatorName: 'Vibemaster', studentName: 'GraduateDev', invitedOpponent: 'GraduateDev', status: 'completed', mode: 'coaching', opponent: 'player', timeLimit: 120, winner: 'GraduateDev', startTime: Date.now() - 3 * 24 * 60 * 60 * 1000 },
+  { id: 'vattle-live-5', theme: 'Live Coaching', creatorName: 'ExpertCoach', studentName: 'LearningDev', invitedOpponent: 'LearningDev', status: 'active', mode: 'coaching', opponent: 'player', timeLimit: 60, startTime: Date.now() - 5 * 60 * 1000 },
+  { id: 'vattle-live-6', theme: 'Live Vattle', creatorName: 'ProGamer', invitedOpponent: 'Challenger', status: 'active', mode: 'standard', opponent: 'player', timeLimit: 45, startTime: Date.now() - 8 * 60 * 1000 },
 ];
 
 const mockTournaments: Tournament[] = [
@@ -104,13 +117,15 @@ const mockTournaments: Tournament[] = [
     { id: 't3', title: 'Community Clash: Eco Edition', theme: 'Sustainable Future', type: 'community', status: 'completed', prizePool: 'V-Bucks', maxParticipants: 128, participants: [], rounds: [] },
 ];
 
-type View = 'auth' | 'arena' | 'battle' | 'voting' | 'profile' | 'rankings' | 'tournaments' | 'tournament_detail' | 'vibelabs' | 'api' | 'streaming' | 'onboarding';
+type View = 'auth' | 'arena' | 'battle' | 'voting' | 'profile' | 'rankings' | 'tournaments' | 'tournament_detail' | 'vibelabs' | 'api' | 'streaming' | 'onboarding' | 'alfred';
 
 const AppContent: React.FC = () => {
     const { user, signOut, loading } = useAuth();
     const [view, setView] = useState<View>('auth');
     const [userProfile, setUserProfile] = useLocalStorage<UserProfile>('vattles-user-profile', initialUserProfile);
-    const [vattles, setVattles] = useLocalStorage<VattleConfig[]>('vattles-data', initialVattles);
+    const [vattles, setVattles] = useState<VattleConfig[]>(initialVattles);
+    const [isLoadingData, setIsLoadingData] = useState(false);
+    const [dataError, setDataError] = useState<string | null>(null);
     const tournaments = mockTournaments;
     const [activeVattle, setActiveVattle] = useState<VattleConfig | null>(null);
     const [activeTournament, setActiveTournament] = useState<Tournament | null>(null);
@@ -133,6 +148,14 @@ const AppContent: React.FC = () => {
         }
     }, []);
 
+    // Load and apply saved theme on app initialization
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('vattles-theme') as ProfileTheme;
+        if (savedTheme && ['default', 'synthwave', 'matrix', 'brutalist-dark'].includes(savedTheme)) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    }, []);
+
     const updateVotedOn = (value: {[key: string]: boolean} | ((val: {[key: string]: boolean}) => {[key: string]: boolean})) => {
         try {
             const newValue = value instanceof Function ? value(votedOn) : value;
@@ -146,6 +169,100 @@ const AppContent: React.FC = () => {
     };
     const [registeredTournaments, setRegisteredTournaments] = useLocalStorage<{[key: string]: boolean}>('vattles-tournaments-reg', {});
     const [labInitialPrompt, setLabInitialPrompt] = useState<string>('');
+
+    // Save user profile changes to Supabase
+    useEffect(() => {
+        if (!user || loading || isLoadingData) return;
+
+        const saveProfile = async () => {
+            try {
+                await DatabaseService.saveUserProfile(user.id, userProfile);
+            } catch (error) {
+                console.error('Failed to save profile:', error);
+            }
+        };
+
+        // Debounce profile saves
+        const timeoutId = setTimeout(saveProfile, 1000);
+        return () => clearTimeout(timeoutId);
+    }, [userProfile, user, loading, isLoadingData]);
+
+    // Save vattle changes to Supabase
+    useEffect(() => {
+        if (!user || loading || isLoadingData || !userProfile.hasCompletedOnboarding) return;
+
+        const saveVattles = async () => {
+            try {
+                for (const vattle of vattles) {
+                    await DatabaseService.saveVattle(vattle);
+                }
+            } catch (error) {
+                console.error('Failed to save vattles:', error);
+            }
+        };
+
+        // Debounce vattle saves
+        const timeoutId = setTimeout(saveVattles, 1000);
+        return () => clearTimeout(timeoutId);
+    }, [vattles, user, loading, isLoadingData, userProfile.hasCompletedOnboarding]);
+
+    // Load data from Supabase when user is authenticated
+    useEffect(() => {
+        if (!user || loading) return;
+
+        const loadUserData = async () => {
+            setIsLoadingData(true);
+            setDataError(null);
+
+            try {
+                // Load user profile from Supabase
+                const profile = await DatabaseService.getUserProfile(user.id);
+                if (profile) {
+                    setUserProfile({
+                        ...profile,
+                        portfolio: mockPortfolio, // Keep mock data for now
+                        showcase: mockShowcase,
+                        achievements: mockAchievements,
+                        endorsements: mockEndorsements,
+                        rivalries: mockRivalries,
+                        promptLibrary: profile.promptLibrary || []
+                    });
+                } else {
+                    // Create new profile if it doesn't exist
+                    const newProfile: UserProfile = {
+                        ...initialUserProfile,
+                        id: user.id,
+                        name: user.user_metadata?.username || userProfile.name,
+                        avatarUrl: user.user_metadata?.avatar_url || userProfile.avatarUrl,
+                        joinDate: new Date().toISOString()
+                    };
+                    setUserProfile(newProfile);
+                    await DatabaseService.saveUserProfile(user.id, newProfile);
+                }
+
+                // Load vattles from Supabase
+                const dbVattles = await DatabaseService.getVattles();
+                if (dbVattles.length > 0) {
+                    setVattles(dbVattles);
+                } else {
+                    // Save initial mock data to database
+                    for (const vattle of initialVattles) {
+                        await DatabaseService.saveVattle(vattle);
+                    }
+                    setVattles(initialVattles);
+                }
+
+            } catch (error) {
+                console.error('Failed to load data:', error);
+                setDataError(DatabaseService.handleError(error));
+                // Fall back to localStorage data
+            } finally {
+                setIsLoadingData(false);
+            }
+        };
+
+        loadUserData();
+    }, [user, loading]);
 
     useEffect(() => {
         if (loading) return; // Wait for auth to load
@@ -197,7 +314,7 @@ const AppContent: React.FC = () => {
         setView('arena');
     };
 
-    const handleCreateVattle = (config: Omit<VattleConfig, 'id' | 'status' | 'startTime' | 'creatorName'>) => {
+    const handleCreateVattle = async (config: Omit<VattleConfig, 'id' | 'status' | 'startTime' | 'creatorName'>) => {
         const isOpenChallenge = config.invitedOpponent === 'Open Invite';
         const newVattle: VattleConfig = {
             ...config,
@@ -206,10 +323,17 @@ const AppContent: React.FC = () => {
             status: isOpenChallenge ? 'pending' : 'active',
             startTime: isOpenChallenge ? undefined : Date.now(),
         };
-        setVattles(prev => [newVattle, ...prev]);
-        setCreateVattleModalOpen(false);
-        if (!isOpenChallenge) {
-            handleEnterBattle(newVattle);
+
+        try {
+            await DatabaseService.saveVattle(newVattle);
+            setVattles(prev => [newVattle, ...prev]);
+            setCreateVattleModalOpen(false);
+            if (!isOpenChallenge) {
+                handleEnterBattle(newVattle);
+            }
+        } catch (error) {
+            console.error('Failed to create vattle:', error);
+            setDataError(DatabaseService.handleError(error));
         }
     };
 
@@ -228,9 +352,19 @@ const AppContent: React.FC = () => {
         handleEnterBattle(updatedVattle);
     };
 
-    const handleVote = (vattleId: string, appIdentifier: 'A' | 'B', ratings: Ratings) => {
-        console.log('Voted on:', { vattleId, appIdentifier, ratings });
-        updateVotedOn(prev => ({ ...prev, [vattleId]: true }));
+    const handleVote = async (vattleId: string, appIdentifier: 'A' | 'B', ratings: Ratings) => {
+        try {
+            // Record vote in database
+            await DatabaseService.recordVote(user!.id, vattleId, `${appIdentifier}-submission`, ratings);
+
+            // Update local voting state
+            updateVotedOn(prev => ({ ...prev, [vattleId]: true }));
+
+            console.log('Voted on:', { vattleId, appIdentifier, ratings });
+        } catch (error) {
+            console.error('Failed to record vote:', error);
+            setDataError(DatabaseService.handleError(error));
+        }
     };
     
     const handleSaveProfile = (newProfile: UserProfile) => {
@@ -293,24 +427,32 @@ const AppContent: React.FC = () => {
         setRegisteredTournaments(prev => ({...prev, [tournamentId]: true}));
     };
     
-    const handleEndorse = (participantId: string, skill: string) => {
-        // In a real app, this would hit a backend and update the participant's profile.
-        // For this mock, we'll just log it.
-        console.log(`Endorsed ${participantId} for skill: ${skill}`);
-        if (userProfile.id === participantId) { // Just for demo, endorse ourselves
-            setUserProfile(prev => {
-                const existingEndorsement = prev.endorsements?.find(e => e.skill === skill);
-                if (existingEndorsement) {
+    const handleEndorse = async (participantId: string, skill: string) => {
+        try {
+            // Add endorsement to database
+            await DatabaseService.addEndorsement(user!.id, participantId, skill);
+
+            // Update local state for immediate feedback
+            if (userProfile.id === participantId) {
+                setUserProfile(prev => {
+                    const existingEndorsement = prev.endorsements?.find(e => e.skill === skill);
+                    if (existingEndorsement) {
+                        return {
+                            ...prev,
+                            endorsements: prev.endorsements?.map(e => e.skill === skill ? {...e, count: e.count + 1} : e)
+                        }
+                    }
                     return {
                         ...prev,
-                        endorsements: prev.endorsements?.map(e => e.skill === skill ? {...e, count: e.count + 1} : e)
+                        endorsements: [...(prev.endorsements || []), { skill, count: 1}]
                     }
-                }
-                return {
-                    ...prev,
-                    endorsements: [...(prev.endorsements || []), { skill, count: 1}]
-                }
-            })
+                })
+            }
+
+            console.log(`Endorsed ${participantId} for skill: ${skill}`);
+        } catch (error) {
+            console.error('Failed to add endorsement:', error);
+            setDataError(DatabaseService.handleError(error));
         }
     };
 
@@ -389,6 +531,8 @@ const AppContent: React.FC = () => {
                  return <ApiView onBack={() => setView('arena')} />;
             case 'streaming':
                 return <StreamingView onBack={() => setView('arena')} />;
+            case 'alfred':
+                return <AlfredCustomization />;
             default:
                 return <VattleArena userProfile={userProfile} vattles={vattles} onEnterBattle={handleEnterBattle} onViewVattle={handleViewVattle} onJoinVattle={handleJoinVattle} />;
         }
@@ -412,6 +556,7 @@ const AppContent: React.FC = () => {
                 <CreateVattleModal isOpen={isCreateVattleModalOpen} onClose={() => setCreateVattleModalOpen(false)} onCreate={handleCreateVattle} isCoach={userProfile.role === 'coach'}/>
                 <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} currentProfile={userProfile} onSave={handleSaveProfile} />
             </div>
+            <Alfred userProfile={user ? userProfile : undefined} />
             <Analytics />
             <TwentyFirstToolbar config={{ plugins: [ReactPlugin] }} />
         </div>

@@ -90,8 +90,12 @@ const CreateVattleView: React.FC<CreateVattleViewProps> = ({ onCreate, onClose, 
       )}
       
       <div>
-        <label htmlFor="timeLimit" className="block text-sm font-medium text-purple-300 mb-2">Time Limit (minutes)</label>
+        <label htmlFor="timeLimit" className="block text-sm font-medium text-purple-300 mb-2">Time Limit</label>
         <select id="timeLimit" value={timeLimit} onChange={(e) => setTimeLimit(Number(e.target.value))} className={inputStyles}>
+          <option value={1}>1 Min - 1 Prompt</option>
+          <option value={1}>1 Minute</option>
+          <option value={5}>5 Minutes</option>
+          <option value={15}>15 Minutes</option>
           <option value={30}>30 minutes</option>
           <option value={45}>45 minutes</option>
           <option value={60}>60 minutes</option>
